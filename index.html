@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAFS 財務狀況表分類挑戰賽</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --bg-color: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .selector-zone {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn-level {
+            padding: 8px 16px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-level.active {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .game-zone {
+            text-align: center;
+            padding: 30px;
+            background: #fdfefe;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .company-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .item-display {
+            font-size: 2rem;
+            color: var(--secondary-color);
+            font-weight: bold;
+            margin: 20px 0;
+            letter-spacing: 1px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-option {
+            padding: 15px;
+            font-size: 1.1rem;
+            background: white;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .btn-option:hover {
+            background: #34495e;
+            color: white;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+        }
+
+        .feedback.correct {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.wrong {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .summary-zone {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .btn-restart {
+            padding: 12px 25px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>BAFS 財務狀況表項目分類挑戰</h1>
+    <div class="subtitle">請幫助各位店主將帳戶正確歸類到資產、資本及負債中吧！</div>
+
+    <div class="selector-zone">
+        <button class="btn-level active" onclick="changeLevel(0)">題目一：小新陀螺店</button>
+        <button class="btn-level" onclick="changeLevel(1)">題目二：阿妙文具店</button>
+        <button class="btn-level" onclick="changeLevel(2)">題目三：大雄玩具店</button>
+    </div>
+
+    <div class="status-bar">
+        <div id="current-company">目前店舖：載入中...</div>
+        <div>進度：<span id="progress">0/0</span></div>
+        <div>得分：<span id="score">0</span></div>
+    </div>
+
+    <div id="quiz-container">
+        <div class="game-zone">
+            <div class="company-title" id="company-info">截至201X年12月31日的財務狀況表</div>
+            <div style="color: #7f8c8d;">請分類以下帳戶：</div>
+            <div class="item-display" id="account-name">帳戶名稱</div>
+            <div style="font-weight: bold; color: #555;" id="account-value">金額: $0</div>
+        </div>
+
+        <div class="options-grid">
+            <button class="btn-option" onclick="checkAnswer('NCA')">非流動資產 (NCA)</button>
+            <button class="btn-option" onclick="checkAnswer('CA')">流動資產 (CA)</button>
+            <button class="btn-option" onclick="checkAnswer('EQ')">資本的計算項目 (Capital/Drawings/Profit)</button>
+            <button class="btn-option" onclick="checkAnswer('NCL')">非流動負債 (NCL)</button>
+            <button class="btn-option" onclick="checkAnswer('CL')">流動負債 (CL)</button>
+        </div>
+
+        <div id="feedback-box" class="feedback"></div>
+    </div>
+
+    <div id="summary-container" class="summary-zone">
+        <h2>🎉 挑戰完成！</h2>
+        <p style="font-size: 1.3rem;">你在這個題目中獲得了 <span id="final-score" style="color: var(--secondary-color); font-weight: bold;">0</span> 分！</p>
+        <p id="evaluation-text"></p>
+        <button class="btn-restart" onclick="resetCurrentLevel()">重新挑戰此題目</button>
+    </div>
+</div>
+
+<script>
+    // 3個適合初學者的財務狀況表題目數據
+    const quizData = [
+        {
+            company: "小新陀螺店",
+            date: "截至201X年12月31日",
+            items: [
+                { name: "汽車 (Motor Vehicles)", value: "100,000", type: "NCA", reason: "汽車是業務長期使用的經營資產，屬於非流動資產。" },
+                { name: "設備 (Equipment)", value: "80,000", type: "NCA", reason: "設備預期使用超過一年，屬於非流動資產。" },
+                { name: "存貨 (Inventory)", value: "30,000", type: "CA", reason: "存貨是打算在短期內出售換取現金的資產，屬於流動資產。" },
+                { name: "應收貨款 (Trade Receivables)", value: "12,000", type: "CA", reason: "客戶欠你的貨款，預期在短期內收回，屬於流動資產。" },
+                { name: "現金 (Cash)", value: "6,000", type: "CA", reason: "現金是流動性最高的資產，屬於流動資產。" },
+                { name: "資本，201x年1月1日 (Capital)", value: "30,000", type: "EQ", reason: "期初資本是權益/資本計算的起點。" },
+                { name: "淨利潤 (Net Profit)", value: "100,000", type: "EQ", reason: "淨利潤會賺取並增加店主的權益，在資本部分相加。" },
+                { name: "提用 (Drawings)", value: "2,000", type: "EQ", reason: "店主提取業務資金作私人用途，會減少權益，在資本部分扣減。" },
+                { name: "貸款：好有錢銀行 (3年期)", value: "50,000", type: "NCL", reason: "還款期超過一年的銀行貸款，屬於非流動負債。" },
+                { name: "貸款：陳小姐 (半年期)", value: "30,000", type: "CL", reason: "還款期在一年之內的短期貸款，屬於流動負債。" },
+                { name: "應付貨款 (Trade Payables)", value: "20,000", type: "CL", reason: "欠供應商的貨款，需要在短期內償還，屬於流動負債。" }
+            ]
+        },
+        {
+            company: "阿妙文具店",
+            date: "截至202X年6月30日",
+            items: [
+                { name: "店舖物業 (Premises)", value: "500,000", type: "NCA", reason: "店舖物業是長期持有的固定資產，屬於非流動資產。" },
+                { name: "辦公室家具 (Fixtures & Fittings)", value: "45,000", type: "NCA", reason: "家具供店舖長期使用，屬於非流動資產。" },
+                { name: "應收貨款 (Trade Receivables)", value: "8,500", type: "CA", reason: "屬於流動資產，預期在一年內收回。" },
+                { name: "銀行存款 (Cash at Bank)", value: "95,000", type: "CA", reason: "存在銀行的資金，隨時可以動用，屬於流動資產。" },
+                { name: "期初資本 (Opening Capital)", value: "400,000", type: "EQ", reason: "這是東主最初投入業務的資本。" },
+                { name: "淨虧損 (Net Loss)", value: "15,000", type: "EQ", reason: "淨虧損減少了東主的權益，應在資本部分中扣減。" },
+                { name: "提用 (Drawings)", value: "3,500", type: "EQ", reason: "提用會令總資本減少。" },
+                { name: "銀行長期貸款 (5年期)", value: "200,000", type: "NCL", reason: "五年後才到期的貸款，屬於非流動負債。" },
+                { name: "應付貨款 (Trade Payables)", value: "35,000", type: "CL", reason: "賒購文具欠供應商的款項，屬於流動負債。" }
+            ]
+        },
+        {
+            company: "大雄玩具店",
+            date: "截至202X年3月31日",
+            items: [
+                { name: "電腦系統 (Computer Equipment)", value: "15,000", type: "NCA", reason: "電腦設備供業務多年使用，屬於非流動資產。" },
+                { name: "玩具存貨 (Inventory)", value: "64,000", type: "CA", reason: "待售的玩具是公司的流動資產。" },
+                { name: "銀行存款 (Cash at Bank)", value: "12,000", type: "CA", reason: "銀行存款屬於流動資產。" },
+                { name: "現金 (Cash in hand)", value: "1,500", type: "CA", reason: "手頭現金屬於流動資產。" },
+                { name: "期初資本 (Capital)", value: "50,000", type: "EQ", reason: "期初資本屬於權益類別。" },
+                { name: "淨利潤 (Net Profit)", value: "28,000", type: "EQ", reason: "淨利潤會調高資本總額。" },
+                { name: "應付貨款 (Trade Payables)", value: "14,500", type: "CL", reason: "經營日常欠款，屬於流動負債。" }
+            ]
+        }
+    ];
+
+    let currentLevel = 0;
+    let currentItemIndex = 0;
+    let score = 0;
+    let activeItems = [];
+
+    // 初始化遊戲
+    function initGame() {
+        const levelData = quizData[currentLevel];
+        document.getElementById("current-company").innerText = `目前店舖：${levelData.company}`;
+        document.getElementById("company-info").innerText = `${levelData.company} - ${levelData.date}`;
+        
+        // 複製並隨機打亂題目順序，增加趣味性
+        activeItems = [...levelData.items].sort(() => Math.random() - 0.5);
+        
+        currentItemIndex = 0;
+        score = 0;
+        
+        document.getElementById("score").innerText = score;
+        document.getElementById("quiz-container").style.display = "block";
+        document.getElementById("summary-container").style.display = "none";
+        document.getElementById("feedback-box").style.display = "none";
+        
+        updateQuestion();
+    }
+
+    // 更新顯示的帳戶題目
+    function updateQuestion() {
+        document.getElementById("progress").innerText = `${currentItemIndex + 1}/${activeItems.length}`;
+        const item = activeItems[currentItemIndex];
+        document.getElementById("account-name").innerText = item.name;
+        document.getElementById("account-value").innerText = `金額: $${item.value}`;
+    }
+
+    // 檢查答案
+    function checkAnswer(userChoice) {
+        const item = activeItems[currentItemIndex];
+        const feedbackBox = document.getElementById("feedback-box");
+        
+        // 禁用按鈕防止重複點擊
+        setButtonsEnabled(false);
+
+        if (userChoice === item.type) {
+            score += 10;
+            document.getElementById("score").innerText = score;
+            feedbackBox.className = "feedback correct";
+            feedbackBox.innerText = `👍 正確！ ${item.reason}`;
+        } else {
+            feedbackBox.className = "feedback wrong";
+            feedbackBox.innerText = `❌ 答錯了！應該是：${getCategoryName(item.type)}。\n原因：${item.reason}`;
+        }
+
+        // 1.8秒後切換到下一題
+        setTimeout(() => {
+            feedbackBox.style.display = "none";
+            currentItemIndex++;
+            setButtonsEnabled(true);
+            
+            if (currentItemIndex < activeItems.length) {
+                updateQuestion();
+            } else {
+                showSummary();
+            }
+        }, 2200);
+    }
+
+    // 輔助獲取分類中文名
+    function getCategoryName(type) {
+        switch(type) {
+            case 'NCA': return '非流動資產';
+            case 'CA': return '流動資產';
+            case 'EQ': return '資本的計算項目';
+            case 'NCL': return '非流動負債';
+            case 'CL': return '流動負債';
+            default: return '';
+        }
+    }
+
+    // 開啟/關閉選項按鈕
+    function setButtonsEnabled(enabled) {
+        const buttons = document.querySelectorAll('.btn-option');
+        buttons.forEach(btn => btn.disabled = !enabled);
+    }
+
+    // 顯示結算畫面
+    function showSummary() {
+        document.getElementById("quiz-container").style.display = "none";
+        document.getElementById("summary-container").style.display = "block";
+        document.getElementById("final-score").innerText = score;
+        
+        const maxScore = activeItems.length * 10;
+        const percentage = score / maxScore;
+        let evalText = "";
+        
+        if (percentage === 1) {
+            evalText = "🎯 太厲害了！你完全掌握了財務狀況表的基礎分類！";
+        } else if (percentage >= 0.7) {
+            evalText = "🌟 做得好！你對會計項目的歸類已經有很不錯的理解。";
+        } else {
+            evalText = "📚 再接再厲！建議重新溫習「資產 = 資本 + 負債」的概念再試一次。";
+        }
+        document.getElementById("evaluation-text").innerText = evalText;
+    }
+
+    // 切換不同公司題目
+    function changeLevel(levelIndex) {
+        currentLevel = levelIndex;
+        const buttons = document.querySelectorAll('.btn-level');
+        buttons.forEach((btn, idx) => {
+            if(idx === levelIndex) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        initGame();
+    }
+
+    // 重新開始當前關卡
+    function resetCurrentLevel() {
+        initGame();
+    }
+
+    // 網頁載入時自動初始化
+    window.onload = initGame;
+</script>
+
+</body>
+</html>
